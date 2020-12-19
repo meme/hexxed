@@ -1,0 +1,26 @@
+name: C
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Environment set-up
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y build-essential cmake ninja-build libncursesw5-dev zlib1g-dev
+      - name: Build
+        run: |
+          mkdir -p build && \
+          cd build && \
+          cmake -G Ninja .. && \
+          ninja
+      - name: Test
+        run: |
+          cd build && \
+          ninja test
