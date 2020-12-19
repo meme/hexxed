@@ -1,0 +1,297 @@
+%include {
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <errno.h>
+
+typedef struct {
+    int64_t result;
+    int error;
+} calculator_t;
+}
+
+%code {
+
+int
+calculator_eval(const char *input, int64_t* result)
+{
+    calculator_t state = {};
+
+    void* parser = (void*) ParseAlloc(malloc);
+
+    for (char i; (i = *input) != '\0'; input++) {
+        switch (i) {
+        case '0': {
+            char *end;
+            int64_t n;
+            switch (*++input) {
+            default:
+                n = strtoull(input, &end, 8);
+                if (input == end) {
+                    return 1;
+                }
+                break;
+            case 'n':
+                n = strtoull(input + 1, &end, 10);
+                if (input == end) {
+                    return 1;
+                }
+                break;
+            case 'b':
+                n = strtoull(++input, &end, 2);
+                if (input == end) {
+                    return 1;
+                }
+                break;
+            case 'x':
+                n = strtoull(input + 1, &end, 16);
+                if (input == end) {
+                    return 1;
+                }
+                break;
+            case '\0':
+            case ' ':
+                // A lone 0.
+                //
+                input--;
+                Parse(parser, INTEGER, 0, &state);
+                continue;
+            }
+
+            Parse(parser, INTEGER, n, &state);
+
+            // Advance the stream.
+            //
+            input = end - 1;
+        } break;
+        case 'a'...'f':
+        case '1'...'9': {
+            char* end;
+            int64_t n = strtoull(input, &end, 16);
+
+            Parse(parser, INTEGER, n, &state);
+
+            // Advance the stream.
+            //
+            input = end - 1;
+        } break;
+        case '+':
+            Parse(parser, PLUS, 0, &state);
+            break;
+        case '-':
+            Parse(parser, MINUS, 0, &state);
+            break;
+        case '*':
+            Parse(parser, TIMES, 0, &state);
+            break;
+        case '/':
+            Parse(parser, DIVIDE, 0, &state);
+            break;
+        case '%':
+            Parse(parser, REMAINDER, 0, &state);
+            break;
+        case '<':
+            if (*(input + 1) == '<') {
+                input++;
+                Parse(parser, LEFT_SHIFT, 0, &state);
+            } else if (*(input + 1) == '=') {
+                input++;
+                Parse(parser, LT_EQ, 0, &state);
+            } else {
+                Parse(parser, LT, 0, &state);
+            }
+            break;
+        case '>':
+            if (*(input + 1) == '>') {
+                input++;
+                Parse(parser, RIGHT_SHIFT, 0, &state);
+            } else if (*(input + 1) == '=') {
+                input++;
+                Parse(parser, GT_EQ, 0, &state);
+            } else {
+                Parse(parser, GT, 0, &state);
+            }
+            break;
+        case '=':
+            if (*(input + 1) == '=') {
+                input++;
+                Parse(parser, EQEQ, 0, &state);
+            } else {
+                return 1;
+            }
+            break;
+        case '!':
+            if (*(input + 1) == '=') {
+                input++;
+                Parse(parser, NOT_EQEQ, 0, &state);
+            } else {
+                Parse(parser, NOT, 0, &state);
+            }
+            break;
+        case '&':
+            if (*(input + 1) == '&') {
+                input++;
+                Parse(parser, LOGICAL_AND, 0, &state);
+            } else {
+                Parse(parser, BIT_AND, 0, &state);
+            }
+            break;
+        case '|':
+            if (*(input + 1) == '|') {
+                input++;
+                Parse(parser, LOGICAL_OR, 0, &state);
+            } else {
+                Parse(parser, BIT_OR, 0, &state);
+            }
+            break;
+        case '^':
+            Parse(parser, BIT_XOR, 0, &state);
+            break;
+        case '~':
+            Parse(parser, BIT_NOT, 0, &state);
+            break;
+        case '(':
+            Parse(parser, LPAR, 0, &state);
+            break;
+        case ')':
+            Parse(parser, RPAR, 0, &state);
+            break;
+        case '\n':
+        case '\r':
+        case '\t':
+        case ' ':
+            break;
+        default:
+            return 1;
+        }
+    }
+
+    Parse(parser, 0, 0, &state);
+    ParseFree(parser, free);
+
+    if (state.error) {
+        return state.error;
+    }
+
+    *result = state.result;
+    return 0;
+}
+}
+
+%syntax_error {
+    state->error = 1;
+}
+
+%extra_argument { calculator_t *state }
+%token_type { int64_t }
+%type expr { int64_t }
+
+%left LOGICAL_AND LOGICAL_OR.
+%left BIT_AND BIT_XOR BIT_OR.
+%left EQEQ NOT_EQEQ.
+%left GT GT_EQ LT LT_EQ.
+%left LEFT_SHIFT RIGHT_SHIFT.
+%left PLUS MINUS.
+%left TIMES DIVIDE REMAINDER.
+%right NOT.
+%right BIT_NOT.
+
+program ::= expr(A). {
+    state->result = A;
+}
+
+expr(A) ::= expr(B) PLUS expr(C). {
+    A = B + C;
+}
+
+expr(A) ::= expr(B) MINUS expr(C). {
+    A = B - C;
+}
+
+expr(A) ::= expr(B) TIMES expr(C). {
+    A = B * C;
+}
+
+expr(A) ::= expr(B) DIVIDE expr(C). {
+    if (C == 0) {
+        A = 0;
+    } else {
+        A = B / C;
+    }
+}
+
+expr(A) ::= expr(B) REMAINDER expr(C). {
+    if (C == 0) {
+        A = 0;
+    } else {
+        A = B % C;
+    }
+}
+
+expr(A) ::= expr(B) LEFT_SHIFT expr(C). {
+    A = B << C;
+}
+
+expr(A) ::= expr(B) RIGHT_SHIFT expr(C). {
+    A = B >> C;
+}
+
+expr(A) ::= expr(B) GT expr(C). {
+    A = B > C;
+}
+
+expr(A) ::= expr(B) GT_EQ expr(C). {
+    A = B >= C;
+}
+
+expr(A) ::= expr(B) LT expr(C). {
+    A = B < C;
+}
+
+expr(A) ::= expr(B) LT_EQ expr(C). {
+    A = B <= C;
+}
+
+expr(A) ::= expr(B) EQEQ expr(C). {
+    A = B == C;
+}
+
+expr(A) ::= expr(B) NOT_EQEQ expr(C). {
+    A = B != C;
+}
+
+expr(A) ::= expr(B) BIT_AND expr(C). {
+    A = B & C;
+}
+
+expr(A) ::= expr(B) BIT_XOR expr(C). {
+    A = B ^ C;
+}
+
+expr(A) ::= expr(B) BIT_OR expr(C). {
+    A = B | C;
+}
+
+expr(A) ::= expr(B) LOGICAL_AND expr(C). {
+    A = B && C;
+}
+
+expr(A) ::= expr(B) LOGICAL_OR expr(C). {
+    A = B || C;
+}
+
+expr(A) ::= BIT_NOT expr(B). {
+    A = ~B;
+}
+
+expr(A) ::= NOT expr(B). {
+    A = !B;
+}
+
+expr(A) ::= LPAR expr(B) RPAR. {
+    A = B;
+}
+
+expr(A) ::= INTEGER(B). {
+    A = B;
+}
