@@ -102,13 +102,10 @@ hex_update(hex_pane_t *pane, int width, int height)
 
             // If the block is under the cursor or inside of a mark, color it.
             //
-            if (!pane->edit && (buffer->cursor == current
-                    || (buffer->mark != -1
-                        && current >= buffer->mark
-                        && current <= buffer->cursor)
-                    || (buffer->mark != -1
-                        && current <= buffer->mark
-                        && current >= buffer->cursor))) {
+            cursor_t mark_end = buffer->end_mark == -1 ? buffer->cursor : buffer->end_mark;
+            int mark_forwards = buffer->start_mark != -1 && current >= buffer->start_mark && current <= mark_end;
+            int mark_backwards = buffer->start_mark != -1 && current <= buffer->start_mark && current >= mark_end;
+            if (!pane->edit && (buffer->cursor == current || mark_forwards || mark_backwards)) {
                 attrset(COLOR_PAIR(COLOR_SELECTED));
             }
 
@@ -135,12 +132,21 @@ hex_update(hex_pane_t *pane, int width, int height)
             // If there is no mark set or the cursor is on the start/end of the
             // mark or it's the last pair on the row, don't color the space.
             //
-            int backwards = buffer->cursor < buffer->mark;
-            if ((range != NULL && range->address + range->size - 1 == current)
-                    || ((!backwards || buffer->mark == -1) && buffer->cursor == current)
-                    || (backwards && buffer->mark == current)
-                    || j == 15) {
+            if (mark_forwards && buffer->end_mark == current) {
                 attrset(COLOR_PAIR(COLOR_STANDARD));
+            }
+
+            if (mark_backwards && buffer->start_mark == current) {
+                attrset(COLOR_PAIR(COLOR_STANDARD));
+            }
+
+            int in_range = range != NULL && range->address + range->size - 1 == current;
+            if ((buffer->cursor == current && !mark_backwards && !mark_forwards) || j == 15 || in_range) {
+                attrset(COLOR_PAIR(COLOR_STANDARD));
+            }
+
+            if (buffer->end_mark == -1 && mark_forwards && buffer->cursor == current) {
+               attrset(COLOR_PAIR(COLOR_STANDARD));
             }
 
             current++;
@@ -178,14 +184,11 @@ hex_update(hex_pane_t *pane, int width, int height)
             char print_str[2];
             wrote = snprintf(print_str, sizeof(print_str),
                     "%c", can_print(data[j]) ? data[j] & 0xff : '.');
-            if (buffer->cursor == current
-                || (!pane->edit
-                    && ((buffer->mark != -1
-                        && current >= buffer->mark
-                        && current <= buffer->cursor)
-                    || (buffer->mark != -1
-                        && current <= buffer->mark
-                        && current >= buffer->cursor)))) {
+
+            cursor_t mark_end = buffer->end_mark == -1 ? buffer->cursor : buffer->end_mark;
+            int mark_forwards = buffer->start_mark != -1 && current >= buffer->start_mark && current <= mark_end;
+            int mark_backwards = buffer->start_mark != -1 && current <= buffer->start_mark && current >= mark_end;
+            if (buffer->cursor == current || (!pane->edit && (mark_forwards || mark_backwards))) {
                 attrset(COLOR_PAIR(COLOR_SELECTED));
             }
 
@@ -208,18 +211,18 @@ hex_update(hex_pane_t *pane, int width, int height)
     //
     cursor_t cursor = buffer->cursor;
     int x = strlen(".00000000`00000000: ");
-    int y = cursor / 16 - pane->scroll;
-    int y_shift = 1; // Status bar
-    y += y_shift;
+    int y = (cursor / 16 - pane->scroll) + 1; // Account for the status bar
 
-    char *comment = buffer_lookup_comment(buffer, cursor);
+    // If there is a comment present: print the comment shifted down or up
+    // depending if there is space.
+    //
+    const char *comment = buffer_lookup_comment(buffer, cursor);
     if (comment != NULL) {
         if (y + 5 >= height) {
             y -= 3;
         } else {
             y += 3;
         }
-        // y += 3; // Put the comment 3 below
         attrset(COLOR_PAIR(COLOR_SELECTED));
         mvaddstr(y, x, "; ");
         mvaddstr(y, x + 2, comment);
@@ -372,18 +375,18 @@ end:
         if (pane->edit)
             break;
 
-        // If there is no mark, set it to the cursor. Otherwise, clear it.
-        //
-        if (buffer->mark == -1) {
-            buffer->mark = buffer->cursor;
-        } else {
-            buffer->mark = -1;
+        if (buffer->start_mark == -1) {
+            buffer->start_mark = buffer->cursor;
+        } else if (buffer->end_mark == -1 && buffer->start_mark != -1) {
+            buffer->end_mark = buffer->cursor;
+        } else if (buffer->end_mark != -1 && buffer->start_mark != -1) {
+            buffer->start_mark = buffer->cursor;
+            buffer->end_mark = -1;
         }
         break;
     case KEY_F(3):
         if (!pane->edit) {
             pane->edit = 1;
-            buffer->mark = -1;
         }
         break;
     case '\x1b': {
@@ -512,13 +515,10 @@ text_update(text_pane_t *pane, int width, int height)
             // If the character is under the cursor or the current mark, color
             // it with a selection.
             //
-            if (buffer->cursor == current
-                    || (buffer->mark != -1
-                        && current >= buffer->mark
-                        && current <= buffer->cursor)
-                    || (buffer->mark != -1
-                        && current <= buffer->mark
-                        && current >= buffer->cursor)) {
+            cursor_t mark_end = buffer->end_mark == -1 ? buffer->cursor : buffer->end_mark;
+            int mark_forwards = buffer->start_mark != -1 && current >= buffer->start_mark && current <= mark_end;
+            int mark_backwards = buffer->start_mark != -1 && current <= buffer->start_mark && current >= mark_end;
+            if (buffer->cursor == current || mark_forwards || mark_backwards) {
                 attrset(COLOR_PAIR(COLOR_SELECTED));
             }
             mvaddch(i, j, c);
@@ -657,10 +657,13 @@ end:
     case 'v':
         // If there is no mark, set it to the cursor. Otherwise, clear it.
         //
-        if (buffer->mark == -1) {
-            buffer->mark = buffer->cursor;
-        } else {
-            buffer->mark = -1;
+        if (buffer->start_mark == -1) {
+            buffer->start_mark = buffer->cursor;
+        } else if (buffer->end_mark == -1 && buffer->start_mark != -1) {
+            buffer->end_mark = buffer->cursor;
+        } else if (buffer->end_mark != -1 && buffer->start_mark != -1) {
+            buffer->start_mark = buffer->cursor;
+            buffer->end_mark = -1;
         }
         break;
     }

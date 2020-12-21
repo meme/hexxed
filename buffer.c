@@ -36,7 +36,8 @@ buffer_open(buffer_t *buffer, const char *path)
 
     buffer->data = data;
     buffer->path = strdup(path);
-    buffer->mark = -1;
+    buffer->start_mark = -1;
+    buffer->end_mark = -1;
     buffer->cursor = 0;
     buffer->comments = g_hash_table_new_full(NULL, NULL, NULL, g_free);
     buffer->highlights = NULL;

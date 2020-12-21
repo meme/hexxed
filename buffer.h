@@ -13,10 +13,11 @@ typedef struct {
     uint8_t *data;
     int f;
     const char *path;
-    // If a mark is set, mark != -1. Otherwise, the mark is set to the cursor
+    // If a mark is set, both marks != -1. Otherwise, the end mark is set to the cursor
     // position.
     //
-    cursor_t mark;
+    cursor_t start_mark;
+    cursor_t end_mark;
     cursor_t cursor;
 
     GHashTable *comments;
