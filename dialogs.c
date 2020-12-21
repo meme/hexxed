@@ -1,8 +1,9 @@
 #include "dialogs.h"
 #include "render.h"
 
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <strings.h>
 
 int calculator_eval(const char *input, int64_t *result);
 
@@ -258,11 +259,11 @@ calculator_driver(void *user_data, int input)
             set_field_buffer(fields[4], 0, "Hex:00000000`00000000");
         } else {
             char sig_message[69];
-            snprintf(sig_message, sizeof(sig_message), "Sig:%ld", result);
+            snprintf(sig_message, sizeof(sig_message), "Sig:%lld", result);
             set_field_buffer(fields[1], 0, sig_message);
 
             char uns_message[69];
-            snprintf(uns_message, sizeof(uns_message), "Uns:%lu", result);
+            snprintf(uns_message, sizeof(uns_message), "Uns:%llu", result);
             set_field_buffer(fields[2], 0, uns_message);
 
             char bin_message[69];

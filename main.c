@@ -148,7 +148,7 @@ driver(int input, int width, int height, pane_t **pane, dialog_t **dialog, buffe
     }
 }
 
-inline static
+inline static void __attribute__ ((noreturn))
 error(const char *message)
 {
     endwin();

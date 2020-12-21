@@ -69,7 +69,7 @@ buffer_close(buffer_t *buffer)
     g_hash_table_unref(buffer->comments);
     if (buffer->highlights)
         g_slist_free_full(buffer->highlights, g_free);
-    free(buffer->path);
+    free((void*) buffer->path);
     return status;
 }
 

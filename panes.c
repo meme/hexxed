@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 void
 pane_drive(pane_t *pane, int input)
