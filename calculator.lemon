@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <assert.h>
+
+#undef NDEBUG
 
 typedef struct {
     int64_t result;
