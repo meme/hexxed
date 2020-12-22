@@ -83,7 +83,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
             free(user_input);
         }
         goto drive;
-    } break;
+    }
     case KEY_F(5): {
         render_options(&EMPTY_OPT);
 
@@ -97,7 +97,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
 
         free(user_input);
         goto drive;
-    } break;
+    }
     case '\x0a':
     case KEY_ENTER: {
         pane_type_t previous = (*pane)->type;
@@ -105,7 +105,8 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
         clear();
         render_status(buffer->path);
         *pane = next_pane(previous, buffer, width, height);
-    } break;
+        goto drive;
+    }
     default:
 drive:
         render_status(buffer->path);
