@@ -24,7 +24,7 @@ add_custom_command(
                 "${CMAKE_SOURCE_DIR}/calculator.lemon"
 )
 
-add_executable(hexxed calculator.c main.c buffer.c buffer.h dialogs.c dialogs.h panes.c panes.h)
+add_executable(hexxed calculator.c main.c buffer.c buffer.h panes.c panes.h render.c render.h)
 target_link_libraries(hexxed PkgConfig::NCURSES PkgConfig::FORM PkgConfig::GLIB)
 
 add_executable(calculator_test calculator_test.c calculator.c)
