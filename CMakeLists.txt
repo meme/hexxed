@@ -14,6 +14,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
 pkg_check_modules(NCURSES REQUIRED IMPORTED_TARGET ncursesw)
 pkg_check_modules(FORM REQUIRED IMPORTED_TARGET formw)
+pkg_check_modules(MENU REQUIRED IMPORTED_TARGET menuw)
 
 add_executable(lemon lemon.c)
 
@@ -25,7 +26,7 @@ add_custom_command(
 )
 
 add_executable(hexxed calculator.c main.c buffer.c buffer.h panes.c panes.h render.c render.h)
-target_link_libraries(hexxed PkgConfig::NCURSES PkgConfig::FORM PkgConfig::GLIB)
+target_link_libraries(hexxed PkgConfig::NCURSES PkgConfig::FORM PkgConfig::MENU PkgConfig::GLIB)
 
 add_executable(calculator_test calculator_test.c calculator.c)
 add_test(calculator calculator_test)

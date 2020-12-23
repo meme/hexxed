@@ -57,7 +57,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
     case '=':
         render_options(&EMPTY_OPT);
         prompt_calculator();
-        goto drive;
+        goto reset;
     case ';': {
         render_options(&EMPTY_OPT);
 
@@ -82,7 +82,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
 
             free(user_input);
         }
-        goto drive;
+        goto reset;
     }
     case KEY_F(5): {
         render_options(&EMPTY_OPT);
@@ -96,7 +96,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
         }
 
         free(user_input);
-        goto drive;
+        goto reset;
     }
     case '\x0a':
     case KEY_ENTER: {
@@ -105,7 +105,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
         clear();
         render_status(buffer->path);
         *pane = next_pane(previous, buffer, width, height);
-        goto drive;
+        goto reset;
     }
     default:
 drive:
@@ -113,6 +113,11 @@ drive:
         render_options((*pane)->options);
         pane_drive(*pane, input);
     }
+
+    return;
+reset:
+    clear();
+    goto drive;
 }
 
 inline static void __attribute__ ((noreturn))

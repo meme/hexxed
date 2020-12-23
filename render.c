@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 int calculator_eval(const char *input, int64_t *result);
 
@@ -360,4 +361,98 @@ prompt_input(const char *title, const char *placeholder, char **user_input)
     delwin(window);
 
     return input_size;
+}
+
+static int
+rmenu_driver(int input, WINDOW *window, MENU *menu, int *index)
+{
+    switch(input) {
+    case KEY_DOWN:
+        menu_driver(menu, REQ_DOWN_ITEM);
+        break;
+    case KEY_UP:
+        menu_driver(menu, REQ_UP_ITEM);
+        break;
+    case KEY_NPAGE:
+        menu_driver(menu, REQ_SCR_DPAGE);
+        break;
+    case KEY_PPAGE:
+        menu_driver(menu, REQ_SCR_UPAGE);
+        break;
+    case '\x0a':
+    case KEY_ENTER: {
+        ITEM *selected = current_item(menu);
+        *index = item_index(selected);
+        return 0;
+    }
+    }
+
+    wrefresh(window);
+    return 1;
+}
+
+int
+prompt_menu(const char *title, const char **options, size_t options_size, int req_width, int start_item)
+{
+    assert(options_size > 0);
+    assert(req_width > 0);
+    assert(start_item >= 0);
+
+    int screen_height, screen_width;
+    getmaxyx(stdscr, screen_height, screen_width);
+
+    // If the width is greater than the screen width with padding lock it to the
+    // screen.
+    //
+    int width = screen_width - 8;
+    width = req_width > width ? width : req_width;
+    int height = screen_height - 6;
+    height = options_size > height ? height : options_size;
+
+    int window_height = height + 2;
+    int window_width = width + 4;
+    WINDOW *window = newwin(window_height, window_width, (screen_height / 2) - (window_height / 2), (screen_width / 2) - (window_width / 2));
+    assert(window != NULL);
+
+    render_border(window);
+
+    ITEM **items = (ITEM**) malloc((options_size + 1) * sizeof(ITEM*));
+    for(int i = 0; i < options_size; i++) {
+        items[i] = new_item(options[i], NULL);
+    }
+    items[options_size] = NULL;
+
+    MENU *menu = new_menu(items);
+
+    set_menu_win(menu, window);
+    set_menu_sub(menu, derwin(window, height, width, 1, 2));
+    set_menu_mark(menu, NULL);
+    set_menu_format(menu, height, 1);
+    post_menu(menu);
+
+    int start = window_width / 2 - (strlen(title) / 2);
+    mvwprintw(window, 0, start - 1, " ");
+    mvwprintw(window, 0, start, title);
+    mvwprintw(window, 0, start + strlen(title), " ");
+    wmove(window, 1, 2);
+
+    refresh();
+    wrefresh(window);
+
+    int input, index = -1;
+    while ((input = getch()) && !input_is_esc(input)) {
+        if (rmenu_driver(input, window, menu, &index) == 0) {
+            break;
+        }
+    }
+
+    unpost_menu(menu);
+    free_menu(menu);
+    for(int i = 0; i < options_size; i++) {
+        free_item(items[i]);
+    }
+    free(items);
+    delwin(window);
+
+    return index;
 }

@@ -4,6 +4,7 @@
 #define _XOPEN_SOURCE_EXTENDED
 #endif
 #include <form.h>
+#include <menu.h>
 #include <ncurses.h>
 #include <wchar.h>
 
@@ -44,4 +45,9 @@ void render_border(WINDOW *window);
 // The state of the screen is UNDEFINED after this function returns.
 //
 size_t prompt_input(const char *title, const char *placeholder, char **user_input);
+// Prompts the user for a menu item returning the index into options.
+// The result is -1 if the prompt is cancelled with ESC.
+// The state of the screen is UNDEFINED after this function returns.
+int prompt_menu(const char *title, const char **options, size_t options_size, int width, int start_item);
+// The state of the screen is UNDEFINED after this function returns.
 void prompt_calculator();
