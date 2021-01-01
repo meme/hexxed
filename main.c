@@ -183,7 +183,7 @@ main(int argc, char *argv[])
 
     buffer_t buffer;
     if (buffer_open(&buffer, argv[1]) != 0) {
-        error("screen must be >86x24");
+        error("cannot open path");
     }
 
     // Render the first time to the screen.
