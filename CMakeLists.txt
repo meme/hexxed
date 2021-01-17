@@ -16,17 +16,24 @@ pkg_check_modules(NCURSES REQUIRED IMPORTED_TARGET ncursesw)
 pkg_check_modules(FORM REQUIRED IMPORTED_TARGET formw)
 pkg_check_modules(MENU REQUIRED IMPORTED_TARGET menuw)
 
+find_program(SCDOC scdoc)
+
 add_executable(lemon lemon.c)
 
 add_custom_command(
     OUTPUT calculator.c calculator.h
     COMMAND lemon "-d${CMAKE_CURRENT_BINARY_DIR}"
-                "-T${CMAKE_SOURCE_DIR}/lempar.c"
-                "${CMAKE_SOURCE_DIR}/calculator.lemon"
+                  "-T${CMAKE_SOURCE_DIR}/lempar.c"
+                  "${CMAKE_SOURCE_DIR}/calculator.lemon"
 )
 
 add_executable(hexxed calculator.c main.c buffer.c buffer.h panes.c panes.h render.c render.h)
 target_link_libraries(hexxed PkgConfig::NCURSES PkgConfig::FORM PkgConfig::MENU PkgConfig::GLIB)
+install(TARGETS hexxed DESTINATION bin)
 
 add_executable(calculator_test calculator_test.c calculator.c)
 add_test(calculator calculator_test)
+
+if(SCDOC)
+  add_subdirectory(man)
+endif()
