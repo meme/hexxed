@@ -456,3 +456,46 @@ prompt_menu(const char *title, const char **options, size_t options_size, int re
 
     return index;
 }
+
+void
+prompt_error(const char *message)
+{
+    assert(strlen(message) < 68);
+
+    int height, width;
+    getmaxyx(stdscr, height, width);
+    WINDOW *window = newwin(1 + 2, 68 + 4, (height / 2) - (7 / 2), (width / 2) - (72 / 2));
+    assert(window != NULL);
+
+    render_border(window);
+
+    FIELD *fields[2];
+    fields[0] = new_field(1, 68, 0, 1, 0, 0);
+    fields[1] = NULL;
+    assert(fields[0] != NULL);
+
+    set_field_buffer(fields[0], 0, message);
+
+    set_field_opts(fields[0], O_VISIBLE | O_PUBLIC | O_AUTOSKIP);
+
+    FORM *form = new_form(fields);
+    assert(form != NULL);
+
+    set_form_win(form, window);
+    set_form_sub(form, derwin(window, 1, 72 - 2, 1, 1));
+    post_form(form);
+
+    mvwprintw(window, 0, 72 / 2 - ((sizeof(" Error ") - 1) / 2), " Error ");
+    wmove(window, 1, 2);
+
+    refresh();
+    wrefresh(window);
+
+    int input;
+    while ((input = getch()) && !input_is_esc(input) && input != KEY_ENTER);
+
+    unpost_form(form);
+    free_form(form);
+    free_field(fields[0]);
+    delwin(window);
+}

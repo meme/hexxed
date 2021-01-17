@@ -13,7 +13,7 @@ buffer_open(buffer_t *buffer, const char *path)
     struct stat status = {};
     uint8_t *data = NULL;
 
-    f = open(path, O_RDWR);
+    f = open(path, O_RDONLY);
     if (f < 0) {
         perror("open");
         goto error;
@@ -28,7 +28,7 @@ buffer_open(buffer_t *buffer, const char *path)
 
     buffer->size = status.st_size;
 
-    data = mmap(NULL, status.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, f, 0);
+    data = mmap(NULL, status.st_size, PROT_READ, MAP_PRIVATE, f, 0);
     if (data == MAP_FAILED) {
         perror("mmap");
         goto error;
@@ -42,6 +42,7 @@ buffer_open(buffer_t *buffer, const char *path)
     buffer->comments = g_hash_table_new_full(NULL, NULL, NULL, g_free);
     buffer->highlights = NULL;
     buffer->bookmarks_head = -1;
+    buffer->editable = 0;
     return 0;
 error:
     if (f > 0) {
@@ -71,6 +72,38 @@ buffer_close(buffer_t *buffer)
         g_slist_free_full(buffer->highlights, g_free);
     free((void*) buffer->path);
     return status;
+}
+
+int
+buffer_try_reopen(buffer_t *buffer)
+{
+    // See if the file can be opened as writable.
+    //
+    int f = open(buffer->path, O_RDWR);
+    if (f < 0) {
+        return 1;
+    }
+
+    struct stat status = {};
+    if (fstat(f, &status) < 0) {
+        close(f);
+        return 1;
+    }
+
+    uint8_t *data = mmap(NULL, status.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, f, 0);
+    if (data == MAP_FAILED) {
+        close(f);
+        return 1;
+    }
+
+    (void) munmap(buffer->data, buffer->size);
+    (void) close(buffer->f);
+
+    buffer->data = data;
+    buffer->f = f;
+    buffer->size = status.st_size;
+    buffer->editable = 1;
+    return 0;
 }
 
 uint64_t

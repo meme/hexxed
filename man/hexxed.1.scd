@@ -24,8 +24,8 @@ are _not_ stacking.
 # OPTIONS
 
 *path*
-	Opens the specified file as read-write, the file must have writable permissions
-	or it will fail to open.
+	Opens the specified file as read-only. Edit mode requires the file to have
+	writable permissions.
 
 # GLOBAL COMMANDS
 
