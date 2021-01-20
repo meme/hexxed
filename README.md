@@ -25,7 +25,7 @@ cmake .. && make
 ### Fedora
 
 ```
-dnf install gcc-c++ cmake pkgconf-pkg-config glib2-devel ncurses-devel
+dnf install gcc-c++ cmake glib2-devel ncurses-devel
 mkdir build && cd build
 cmake .. && make
 ```
