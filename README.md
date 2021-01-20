@@ -19,8 +19,15 @@ A portable, public-domain hex editor released under the Unlicense, or the public
 
 ```
 apt install g++ cmake pkg-config libglib2.0-dev libncurses-dev
-mkdir build && cmake ..
-make
+mkdir build && cd build
+cmake .. && make
+```
+### Fedora
+
+```
+dnf install gcc-c++ cmake glib2-devel ncurses-devel
+mkdir build && cd build
+cmake .. && make
 ```
 
 ## Usage
