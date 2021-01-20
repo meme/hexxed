@@ -61,7 +61,9 @@ The data on the far right is the ASCII representation of the buffer data, see
 Navigating in Hexxed is straightforward, use the arrow keys to move around the
 buffer and *Page up* and *Page down* to advance by the current terminal height.
 The *Home* and *End* keys go to the beginning and end of the buffer,
-respectively. Hexxed uses an overscroll of 3 rows.
+respectively. Hexxed uses an overscroll of 3 rows. Additionally, *+* and *-*
+can be used to push and pop bookmarks on a stack, respectively. A maximum of 8
+bookmarks is supported by default.
 
 # Step 3: Selecting Blocks
 
