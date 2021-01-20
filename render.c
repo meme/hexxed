@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 int calculator_eval(const char *input, int64_t *result);
 
@@ -121,11 +122,11 @@ calculator_driver(int input, WINDOW *window, FORM *form, FIELD **fields)
             set_field_buffer(fields[4], 0, "Hex:00000000`00000000");
         } else {
             char sig_message[69];
-            snprintf(sig_message, sizeof(sig_message), "Sig:%lld", result);
+            snprintf(sig_message, sizeof(sig_message), "Sig:%" PRId64, result);
             set_field_buffer(fields[1], 0, sig_message);
 
             char uns_message[69];
-            snprintf(uns_message, sizeof(uns_message), "Uns:%llu", result);
+            snprintf(uns_message, sizeof(uns_message), "Uns:%" PRIu64, result);
             set_field_buffer(fields[2], 0, uns_message);
 
             char bin_message[69];
