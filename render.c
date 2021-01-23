@@ -29,6 +29,7 @@ render_status(const char *path)
 {
     int height, width;
     getmaxyx(stdscr, height, width);
+    (void) height;
 
     attrset(COLOR_PAIR(COLOR_STATUS));
     char status_bar[width + 1];
