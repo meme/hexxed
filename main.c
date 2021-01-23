@@ -1,5 +1,8 @@
-#include <stdlib.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include <stdio.h>
+#include <stdlib.h>
 #include <locale.h>
 #include <string.h>
 #include <assert.h>
@@ -96,6 +99,44 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
         }
 
         free(user_input);
+        goto reset;
+    }
+    case KEY_F(9): {
+        size_t comments_size = g_hash_table_size(buffer->comments);
+        if (comments_size == 0) {
+            prompt_error("No names.");
+            goto reset;
+        }
+
+        char **comments_data = malloc(sizeof(char*) * comments_size);
+
+        GHashTableIter i;
+        gpointer key, value;
+        g_hash_table_iter_init(&i, buffer->comments);
+        int n = 0;
+        while (g_hash_table_iter_next(&i, &key, &value)) {
+            char *comment;
+            asprintf(&comment, "%08x  %s", (uint32_t) (GPOINTER_TO_SIZE(key) & 0x00000000ffffffff), (char*) value);
+            comments_data[n++] = comment;
+        }
+
+        int selected = prompt_menu("Names", (const char**) comments_data, comments_size, 64, 0);
+
+        // Find the address of the selected name.
+        //
+        g_hash_table_iter_init(&i, buffer->comments);
+        n = 0;
+        while (g_hash_table_iter_next(&i, &key, &value)) {
+            if (n++ == selected) {
+                pane_scroll(*pane, GPOINTER_TO_SIZE(key));
+            }
+        }
+
+        for (int j = 0; j < comments_size; j++) {
+            free(comments_data[j]);
+        }
+
+        free(comments_data);
         goto reset;
     }
     case '\x0a':

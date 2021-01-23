@@ -38,7 +38,8 @@ const options_t HEX_OPT = {
     [2] = "Edit  ",
     // Handled in main driver.
     //
-    [4] = "Goto  "
+    [4] = "Goto  ",
+    [8] = "Names ",
 };
 
 typedef struct {
@@ -381,7 +382,7 @@ end:
         } else if (buffer->end_mark == -1 && buffer->start_mark != -1) {
             buffer->end_mark = buffer->cursor;
         } else if (buffer->end_mark != -1 && buffer->start_mark != -1) {
-            buffer->start_mark = buffer->cursor;
+            buffer->start_mark = -1;
             buffer->end_mark = -1;
         }
         break;
@@ -486,7 +487,8 @@ const options_t TEXT_OPT = {
     [0 ... 9] = "      ",
     // Handled in main driver.
     //
-    [4] = "Goto  "
+    [4] = "Goto  ",
+    [8] = "Names ",
 };
 
 typedef struct {
