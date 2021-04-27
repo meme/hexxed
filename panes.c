@@ -387,7 +387,7 @@ end:
         }
         break;
     case KEY_F(3):
-        if (!pane->edit) {
+        if (!pane->edit && buffer->editable) {
             pane->edit = 1;
         }
         break;

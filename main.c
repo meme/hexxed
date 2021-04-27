@@ -152,7 +152,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
         if (!buffer->editable) {
             if (buffer_try_reopen(buffer)) {
                 prompt_error("The file could not be opened as writable.");
-                break;
+                goto reset;
             }
         }
         goto drive;
