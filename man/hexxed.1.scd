@@ -60,6 +60,12 @@ are _not_ stacking.
 *=*
 	Opens the calculator. See *Calculator*.
 
+*+*
+	Push the cursor position to the bookmark stack.
+
+*-*
+	Pop a bookmark from the stack and move to that location.
+
 # CALCULATOR
 
 Hexxed can also be used as a 64-bit calculator. The following operators are
