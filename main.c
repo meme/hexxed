@@ -107,6 +107,14 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
         *pane = next_pane(previous, buffer, width, height);
         goto reset;
     }
+    case KEY_F(3):
+        if (!buffer->editable) {
+            if (buffer_try_reopen(buffer)) {
+                prompt_error("The file could not be opened as writable.");
+                break;
+            }
+        }
+        goto drive;
     default:
 drive:
         render_status(buffer->path);

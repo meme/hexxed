@@ -15,20 +15,18 @@ A portable, public-domain hex editor released under the Unlicense, or the public
 
 ## Building
 
-### Debian based Linux
+### Debian-based Linux
 
-    apt install g++ cmake pkg-config libglib2.0-dev libncurses-dev
-    cmake .
-    make
+```
+apt install g++ cmake pkg-config libglib2.0-dev libncurses-dev
+mkdir build && cmake ..
+make
+```
 
 ## Usage
 
-    ./hexxed [FILE]
+```
+./hexxed [path]
+```
 
-FILE should be writeable.
-
-### Commands
-
-* F3 - Edit mode
-* F5 - Goto (hex input only)
-* F10 - Quit
+See *hexxed*(1) and *hexxed-tutorial*(7) for documentation and tutorials.

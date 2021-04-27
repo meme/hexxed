@@ -24,6 +24,7 @@ typedef struct {
     GSList *highlights;
     uintptr_t bookmarks[BOOKMARK_STACK_SIZE];
     int bookmarks_head;
+    int editable;
 } buffer_t;
 
 typedef struct {
@@ -34,6 +35,11 @@ typedef struct {
 
 int buffer_open(buffer_t *buffer, const char *path);
 int buffer_close(buffer_t *buffer);
+// Attempt to reopen the current buffer as read-write, if it fails, the current
+// buffer is left intact. If successful, all pointers into the previous map are
+// invalidated.
+//
+int buffer_try_reopen(buffer_t *buffer);
 // Returns the scroll required to centre the offset in a buffer view, and sets
 // the cursor to "offset", or the start/end of the buffer if the offset is out
 // of range.

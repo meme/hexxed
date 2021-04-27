@@ -49,5 +49,9 @@ size_t prompt_input(const char *title, const char *placeholder, char **user_inpu
 // The result is -1 if the prompt is cancelled with ESC.
 // The state of the screen is UNDEFINED after this function returns.
 int prompt_menu(const char *title, const char **options, size_t options_size, int width, int start_item);
+// Displays a non-fatal error to the user.
+//
+void prompt_error(const char *message);
 // The state of the screen is UNDEFINED after this function returns.
+//
 void prompt_calculator();
