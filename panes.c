@@ -382,7 +382,7 @@ end:
         } else if (buffer->end_mark == -1 && buffer->start_mark != -1) {
             buffer->end_mark = buffer->cursor;
         } else if (buffer->end_mark != -1 && buffer->start_mark != -1) {
-            buffer->start_mark = buffer->cursor;
+            buffer->start_mark = -1;
             buffer->end_mark = -1;
         }
         break;
