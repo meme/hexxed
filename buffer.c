@@ -6,6 +6,22 @@
 #include <unistd.h>
 #include <stdio.h>
 
+void
+buffer_from_data(buffer_t *buffer, const uint8_t *data, size_t size)
+{
+    buffer->data = (uint8_t*) data;
+    buffer->size = size;
+    buffer->path = NULL;
+    buffer->f = -1;
+    buffer->start_mark = -1;
+    buffer->end_mark = -1;
+    buffer->cursor = 0;
+    buffer->comments = g_hash_table_new_full(NULL, NULL, NULL, g_free);
+    buffer->highlights = NULL;
+    buffer->bookmarks_head = -1;
+    buffer->editable = 0;
+}
+
 int
 buffer_open(buffer_t *buffer, const char *path)
 {
@@ -55,6 +71,14 @@ error:
 int
 buffer_close(buffer_t *buffer)
 {
+    if (buffer->f < 0) {
+        g_hash_table_unref(buffer->comments);
+        if (buffer->highlights) {
+            g_slist_free_full(buffer->highlights, g_free);
+        }
+        return 0;
+    }
+
     int status = 0;
 
     if (munmap(buffer->data, buffer->size) != 0) {
@@ -68,8 +92,9 @@ buffer_close(buffer_t *buffer)
     }
 
     g_hash_table_unref(buffer->comments);
-    if (buffer->highlights)
+    if (buffer->highlights) {
         g_slist_free_full(buffer->highlights, g_free);
+    }
     free((void*) buffer->path);
     return status;
 }
@@ -77,6 +102,12 @@ buffer_close(buffer_t *buffer)
 int
 buffer_try_reopen(buffer_t *buffer)
 {
+    // Not possible to reopen a in-memory buffer.
+    //
+    if (buffer->path == NULL) {
+        return 1;
+    }
+
     // See if the file can be opened as writable.
     //
     int f = open(buffer->path, O_RDWR);
@@ -104,6 +135,137 @@ buffer_try_reopen(buffer_t *buffer)
     buffer->size = status.st_size;
     buffer->editable = 1;
     return 0;
+}
+
+int
+buffer_read(buffer_t *buffer, void *data, size_t size)
+{
+    if (buffer->cursor + size > buffer->size) {
+        return 1;
+    }
+
+    memcpy(data, &buffer->data[buffer->cursor], size);
+    return 0;
+}
+
+int
+buffer_read_u8(buffer_t *buffer, uint8_t *data)
+{
+    return buffer_read(buffer, data, sizeof(*data));
+}
+
+int
+buffer_read_i8(buffer_t *buffer, int8_t *data)
+{
+    return buffer_read(buffer, data, sizeof(*data));
+}
+
+int
+buffer_read_lu16(buffer_t *buffer, uint16_t *data)
+{
+    uint8_t v[sizeof(*data)];
+    if (buffer_read(buffer, v, sizeof(v))) {
+        return 1;
+    }
+
+    *data = (uint16_t) v[0] | (uint16_t) v[1] << 8;
+    return 0;
+}
+
+int
+buffer_read_bu16(buffer_t *buffer, uint16_t *data)
+{
+    uint8_t v[sizeof(*data)];
+    if (buffer_read(buffer, v, sizeof(v))) {
+        return 1;
+    }
+
+    *data = (uint16_t) v[1] | (uint16_t) v[0] << 8;
+    return 0;
+}
+
+int
+buffer_read_lu32(buffer_t *buffer, uint32_t *data)
+{
+    uint8_t v[sizeof(*data)];
+    if (buffer_read(buffer, v, sizeof(v))) {
+        return 1;
+    }
+
+    *data = (uint32_t) v[0] | (uint32_t) v[1] << 8 | (uint32_t) v[2] << 16 | (uint32_t) v[3] << 24;
+    return 0;
+}
+
+int
+buffer_read_bu32(buffer_t *buffer, uint32_t *data)
+{
+    uint8_t v[sizeof(*data)];
+    if (buffer_read(buffer, v, sizeof(v))) {
+        return 1;
+    }
+
+    *data = (uint32_t) v[3] | (uint32_t) v[2] << 8 | (uint32_t) v[1] << 16 | (uint32_t) v[0] << 24;
+    return 0;
+}
+
+int
+buffer_read_lu64(buffer_t *buffer, uint64_t *data)
+{
+    uint8_t v[sizeof(*data)];
+    if (buffer_read(buffer, v, sizeof(v))) {
+        return 1;
+    }
+
+    *data = (uint64_t) v[0] | (uint64_t) v[1] << 8 | (uint64_t) v[2] << 16 | (uint64_t) v[3] << 24 | (uint64_t) v[4] << 32 | (uint64_t) v[5] << 40 | (uint64_t) v[6] << 48 | (uint64_t) v[7] << 56;
+    return 0;
+}
+
+int
+buffer_read_bu64(buffer_t *buffer, uint64_t *data)
+{
+    uint8_t v[sizeof(*data)];
+    if (buffer_read(buffer, v, sizeof(v))) {
+        return 1;
+    }
+
+    *data = (uint64_t) v[7] | (uint64_t) v[6] << 8 | (uint64_t) v[5] << 16 | (uint64_t) v[4] << 24 | (uint64_t) v[3] << 32 | (uint64_t) v[2] << 40 | (uint64_t) v[1] << 48 | (uint64_t) v[0] << 56;
+    return 0;
+}
+
+int
+buffer_read_li16(buffer_t *buffer, int16_t *data)
+{
+    return buffer_read_lu16(buffer, (uint16_t*) data);
+}
+
+int
+buffer_read_bi16(buffer_t *buffer, int16_t *data)
+{
+    return buffer_read_bu16(buffer, (uint16_t*) data);
+}
+
+int
+buffer_read_li32(buffer_t *buffer, int32_t *data)
+{
+    return buffer_read_lu32(buffer, (uint32_t*) data);
+}
+
+int
+buffer_read_bi32(buffer_t *buffer, int32_t *data)
+{
+    return buffer_read_bu32(buffer, (uint32_t*) data);
+}
+
+int
+buffer_read_li64(buffer_t *buffer, int64_t *data)
+{
+    return buffer_read_lu64(buffer, (uint64_t*) data);
+}
+
+int
+buffer_read_bi64(buffer_t *buffer, int64_t *data)
+{
+    return buffer_read_bu64(buffer, (uint64_t*) data);
 }
 
 uint64_t

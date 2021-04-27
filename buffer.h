@@ -33,6 +33,7 @@ typedef struct {
     uint32_t color;
 } range_t;
 
+void buffer_from_data(buffer_t *buffer, const uint8_t *data, size_t size);
 int buffer_open(buffer_t *buffer, const char *path);
 int buffer_close(buffer_t *buffer);
 // Attempt to reopen the current buffer as read-write, if it fails, the current
@@ -40,6 +41,23 @@ int buffer_close(buffer_t *buffer);
 // invalidated.
 //
 int buffer_try_reopen(buffer_t *buffer);
+
+int buffer_read(buffer_t *buffer, void *data, size_t size);
+int buffer_read_u8(buffer_t *buffer, uint8_t *data);
+int buffer_read_i8(buffer_t *buffer, int8_t *data);
+int buffer_read_lu16(buffer_t *buffer, uint16_t *data);
+int buffer_read_bu16(buffer_t *buffer, uint16_t *data);
+int buffer_read_lu32(buffer_t *buffer, uint32_t *data);
+int buffer_read_bu32(buffer_t *buffer, uint32_t *data);
+int buffer_read_lu64(buffer_t *buffer, uint64_t *data);
+int buffer_read_bu64(buffer_t *buffer, uint64_t *data);
+int buffer_read_li16(buffer_t *buffer, int16_t *data);
+int buffer_read_bi16(buffer_t *buffer, int16_t *data);
+int buffer_read_li32(buffer_t *buffer, int32_t *data);
+int buffer_read_bi32(buffer_t *buffer, int32_t *data);
+int buffer_read_li64(buffer_t *buffer, int64_t *data);
+int buffer_read_bi64(buffer_t *buffer, int64_t *data);
+
 // Returns the scroll required to centre the offset in a buffer view, and sets
 // the cursor to "offset", or the start/end of the buffer if the offset is out
 // of range.

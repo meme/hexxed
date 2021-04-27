@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-int calculator_eval(const char *input, int64_t *result);
+int calculator_eval(buffer_t *buffer, const char *input, int64_t *result);
 
 static inline int
 input_is_esc(int input)
@@ -99,7 +99,7 @@ render_border(WINDOW *window)
 }
 
 static int
-calculator_driver(int input, WINDOW *window, FORM *form, FIELD **fields)
+calculator_driver(int input, buffer_t *buffer, WINDOW *window, FORM *form, FIELD **fields)
 {
     if (input_is_esc(input)) {
         return 0;
@@ -116,7 +116,7 @@ calculator_driver(int input, WINDOW *window, FORM *form, FIELD **fields)
 
         // Evaluate the input. If an error occurs, zero out the result fields.
         int64_t result;
-        if (calculator_eval(expression, &result) != 0) {
+        if (calculator_eval(buffer, expression, &result) != 0) {
             set_field_buffer(fields[1], 0, "Sig:0");
             set_field_buffer(fields[2], 0, "Uns:0");
             set_field_buffer(fields[3], 0, "Bin:0000000000000000000000000000000000000000000000000000000000000000");
@@ -172,7 +172,7 @@ calculator_driver(int input, WINDOW *window, FORM *form, FIELD **fields)
 }
 
 void
-prompt_calculator()
+prompt_calculator(buffer_t *buffer)
 {
     // Create a window to contain the calculator, factoring in the border sizes.
     // +2 for the vertical border, and +4 for the left and right padding on the
@@ -228,7 +228,7 @@ prompt_calculator()
     //
     curs_set(1);
 
-    while (calculator_driver(getch(), window, form, fields));
+    while (calculator_driver(getch(), buffer, window, form, fields));
 
     // Restore the cursor state.
     //

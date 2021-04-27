@@ -38,6 +38,9 @@ are _not_ stacking.
 	Open the Goto dialog. This dialog supports full expression evaluation like
 	the *Calculator*. Hit enter after entering an expression, or Escape to exit.
 
+*F9*
+	List all comments. Select a comment and hit *Enter* to go to it.
+
 *F10*
 	Save changes and exit.
 
@@ -88,6 +91,21 @@ a prefix. The following prefixes are supported:
 - 0o for base 8
 - 0x for base 16 (the default if no prefix is specified)
 - 0b for base 2
+
+The buffer can also be accessed from the calculator using the following data
+specifiers and a prefix:
+
+- @ for unsigned data
+- # for signed data
+
+- b for a byte
+- s for a 16-bit integer
+- i for a 32-bit integer
+- l for a 64-bit integer
+
+Lower-case specifiers read little-endian data, while upper-case specifiers read
+big-endian data. For example, *@S* will read an unsigned big-endian short while a
+*#l* will read a little-endian signed long.
 
 # SEE ALSO
 

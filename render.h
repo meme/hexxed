@@ -8,6 +8,8 @@
 #include <ncurses.h>
 #include <wchar.h>
 
+#include "buffer.h"
+
 // Thanks, ncurses.
 //
 #ifdef scroll
@@ -54,4 +56,4 @@ int prompt_menu(const char *title, const char **options, size_t options_size, in
 void prompt_error(const char *message);
 // The state of the screen is UNDEFINED after this function returns.
 //
-void prompt_calculator();
+void prompt_calculator(buffer_t *buffer);

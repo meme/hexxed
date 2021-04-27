@@ -28,10 +28,13 @@ add_custom_command(
 )
 
 add_executable(hexxed calculator.c main.c buffer.c buffer.h panes.c panes.h render.c render.h)
+target_include_directories(hexxed PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(hexxed PkgConfig::NCURSES PkgConfig::FORM PkgConfig::MENU PkgConfig::GLIB)
 install(TARGETS hexxed DESTINATION bin)
 
-add_executable(calculator_test calculator_test.c calculator.c)
+add_executable(calculator_test calculator_test.c calculator.c buffer.c)
+target_include_directories(calculator_test PUBLIC ${CMAKE_SOURCE_DIR})
+target_link_libraries(calculator_test PkgConfig::GLIB)
 add_test(calculator calculator_test)
 
 if(SCDOC)

@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <assert.h>
 
+#include "buffer.h"
+
 #undef NDEBUG
 
 typedef struct {
@@ -16,7 +18,7 @@ typedef struct {
 %code {
 
 int
-calculator_eval(const char *input, int64_t* result)
+calculator_eval(buffer_t *buffer, const char *input, int64_t* result)
 {
     calculator_t state = {};
 
@@ -158,6 +160,146 @@ calculator_eval(const char *input, int64_t* result)
             break;
         case ')':
             Parse(parser, RPAR, 0, &state);
+            break;
+        case '@':
+            switch (*++input) {
+            case 'b': {
+                uint8_t data;
+                if (buffer_read_u8(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'B': {
+                uint8_t data;
+                if (buffer_read_u8(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 's': {
+                uint16_t data;
+                if (buffer_read_lu16(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'S': {
+                uint16_t data;
+                if (buffer_read_bu16(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'i': {
+                uint32_t data;
+                if (buffer_read_lu32(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'I': {
+                uint32_t data;
+                if (buffer_read_bu32(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'l': {
+                uint64_t data;
+                if (buffer_read_lu64(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'L': {
+                uint64_t data;
+                if (buffer_read_bu64(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            default:
+                return 1;
+            }
+            break;
+        case '#':
+            switch (*++input) {
+            case 'b': {
+                int8_t data;
+                if (buffer_read_i8(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'B': {
+                int8_t data;
+                if (buffer_read_i8(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 's': {
+                int16_t data;
+                if (buffer_read_li16(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'S': {
+                int16_t data;
+                if (buffer_read_bi16(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'i': {
+                int32_t data;
+                if (buffer_read_li32(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'I': {
+                int32_t data;
+                if (buffer_read_bi32(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'l': {
+                int64_t data;
+                if (buffer_read_li64(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            case 'L': {
+                int64_t data;
+                if (buffer_read_bi64(buffer, &data)) {
+                    return 1;
+                }
+
+                Parse(parser, INTEGER, data, &state);
+            } break;
+            default:
+                return 1;
+            }
             break;
         case '\n':
         case '\r':

@@ -12,7 +12,7 @@
 #include "panes.h"
 #include "render.h"
 
-int calculator_eval(const char *input, int64_t *result);
+int calculator_eval(buffer_t *buffer, const char *input, int64_t *result);
 
 static char*
 trim(char *str)
@@ -59,7 +59,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
     switch (input) {
     case '=':
         render_options(&EMPTY_OPT);
-        prompt_calculator();
+        prompt_calculator(buffer);
         goto reset;
     case ';': {
         render_options(&EMPTY_OPT);
@@ -94,7 +94,7 @@ driver(int input, int width, int height, pane_t **pane, buffer_t *buffer)
         prompt_input("Goto", NULL, &user_input);
 
         int64_t result = -1;
-        if (user_input != NULL && calculator_eval(user_input, &result) == 0 && result >= 0) {
+        if (user_input != NULL && calculator_eval(buffer, user_input, &result) == 0 && result >= 0) {
             pane_scroll(*pane, (uint64_t) result);
         }
 

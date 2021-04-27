@@ -1,19 +1,36 @@
 #include <stdint.h>
 #include <assert.h>
 
-int calculator_eval(const char *input, int64_t *result);
+#include "buffer.h"
+
+const uint8_t TEST_DATA[] = {
+    0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+};
+
+buffer_t g_buffer;
+
+int calculator_eval(buffer_t *buffer, const char *input, int64_t *result);
 
 void
 calculator_assert(const char *input, int64_t expected)
 {
     int64_t result;
-    assert(calculator_eval(input, &result) == 0);
+    assert(calculator_eval(&g_buffer, input, &result) == 0);
     assert(result == expected);
+}
+
+void
+calculator_err(const char *input)
+{
+    int64_t result;
+    assert(calculator_eval(&g_buffer, input, &result) != 0);
 }
 
 int
 main(int argc, char *argv[])
 {
+    buffer_from_data(&g_buffer, TEST_DATA, sizeof(TEST_DATA));
+
     // Number formatting.
     //
     calculator_assert("101", 257);
@@ -113,5 +130,31 @@ main(int argc, char *argv[])
     calculator_assert("~0b00 + 0n10 * 0x20 << ((030 != 40) < 50)", 638);
     calculator_assert("(1) + (2) + (3)", 6);
 
+    // Buffer read.
+    //
+    calculator_assert("@b", 1);
+    calculator_assert("@B", 1);
+    calculator_assert("@s", 8961);
+    calculator_assert("@S", 291);
+    calculator_assert("@i", 1732584193);
+    calculator_assert("@I", 19088743);
+    calculator_assert("@l", 17279655951921914625UL);
+    calculator_assert("@L", 81985529216486895);
+
+    calculator_assert("#b", 1);
+    calculator_assert("#B", 1);
+    calculator_assert("#s", 8961);
+    calculator_assert("#S", 291);
+    calculator_assert("#i", 1732584193);
+    calculator_assert("#I", 19088743);
+    calculator_assert("#l", -1167088121787636991);
+    calculator_assert("#L", 81985529216486895);
+
+    // Buffer reading off end of file.
+    //
+    g_buffer.cursor = 6;
+    calculator_err("@l");
+
+    buffer_close(&g_buffer);
     return 0;
 }
