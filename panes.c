@@ -38,7 +38,8 @@ const options_t HEX_OPT = {
     [2] = "Edit  ",
     // Handled in main driver.
     //
-    [4] = "Goto  "
+    [4] = "Goto  ",
+    [8] = "Names ",
 };
 
 typedef struct {
@@ -486,7 +487,8 @@ const options_t TEXT_OPT = {
     [0 ... 9] = "      ",
     // Handled in main driver.
     //
-    [4] = "Goto  "
+    [4] = "Goto  ",
+    [8] = "Names ",
 };
 
 typedef struct {
